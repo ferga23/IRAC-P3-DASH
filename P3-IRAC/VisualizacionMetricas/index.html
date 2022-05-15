@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>DASH Application</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.3.0/dash.all.min.js" integrity="sha512-XySDxg2J8BFPCGF0ToToWEkPGqvg9as64sBRrelx17aITK+JKxBEG9fATs5F2H/d5OLZP4V3AULTeM4k14coGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.1.1/chart.min.js" integrity="sha512-BqNYFBAzGfZDnIWSAEGZSD/QFKeVxms2dIBPfw11gZubWwKUjEgmFUtUls8vZ6xTRZN/jaXGHD/ZaxD9+fDo0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>		<style>
+			body {
+				background-color: #E1F5FE;
+				font-family: helvetica;
+			}
+			.main {
+				background-color: white;
+				width: 960px;
+				height: 660px;
+				margin-bottom: auto;
+				margin-right: auto;
+				margin-left: auto;
+				margin-top: -25px;
+			}
+			.title {
+				color: #FAFAFA;
+				padding-top: 30px;
+				height: 100px;
+				background-color: #515151;
+			}
+			.reproductor {
+				color: #212121;
+				padding-top: 25px;
+			}
+			video {
+				width: 640px;
+				height: 360px;
+				padding-top: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="main">
+		
+			<div class="title" align="center">
+				<h1>Servicio de streaming del Grupo 35</h1>
+			</div>
+	
+			<div class="reproductor" align="center">
+				<video class="dashjs-player" autoplay controls preload="auto" muted>
+				</video>
+			</div>
+	
+			<div class="code" align="center">
+				 <p>Video Bitrate: <span id="bitrate"></span> kbps</p>
+				 <p>Video Buffer: <span id="buffer"></span> seconds</p>
+				 <p>Video Representation: <span id="representation"></span></p>
+			</div>	
+	
+			<div class="container">
+				<canvas id="myChart"></canvas>
+			  </div>
+	
+		</div>
+
+		<script>
+			//var player;
+			// https://cdnjs.com/libraries/dashjs
+
+			document.addEventListener("DOMContentLoaded", function () {
+			 init();
+			});
+
+			const protData = {
+				"org.w3.clearkey": {
+					"clearkeys": {
+						"oW5AK5BW43HzbTSKpiu3SQ": "hyN9IKGfWKdAwFaE5pm0qg"
+					}
+				}
+			};
+
+			function addData (chart, label, data ) {
+				chart.data.labels.push('');
+				chart.data.datasets.forEach((dataset) => {
+					if (dataset.label == label ){
+						dataset.data.push(data);
+					}
+				});
+				chart.update()
+			}
+
+			function removeData(chart) {
+				chart.data.labels.pop();
+				chart.data.datasets.forEach((dataset) => {
+					dataset.data.pop();
+				});
+				chart.update();
+			}
+
+			let ch1 = document.getElementById('myChart').getContext('2d');
+			let chart1 = new Chart(ch1, {
+				type: 'line',
+				data:{
+					datasets:[
+						{
+							label: 'Bitrate',
+							data: [],
+							backgroundColor: '#000000',
+							borderColor: '#000000',
+							yAxisID: 'y'
+						},
+						{
+							label: 'Buffer Level',
+							data: [],
+							backgroundColor: '#7FFF00',
+							borderColor: '#7FFF00',
+							yAxisID: 'y1'
+						}
+					]
+				},
+				options: {
+					responsive: true,
+					hoverMode: 'index',
+					stacked: false,
+					scales: {
+						y: {
+							title:{
+								display: true,
+								text: 'Bitrate (kbps)'
+							},
+							display: true,
+							type: 'linear',
+							position: 'left'
+						},
+						y1: {
+							title:{
+								display: true,
+								text: 'Buffer Level (s)'
+							},
+							display: true,
+							type: 'linear',
+							position: 'right'
+						}	
+					}
+				}
+			});
+
+
+			function init(){
+			// player = dashjs.MediaPlayerFactory.create( document.querySelector(".dashjsplayer"));
+			var video, player, mpd_url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+			video = document.querySelector("video");
+
+			player = dashjs.MediaPlayer().create();		
+			player.setProtectionData(protData);
+			player.initialize(video, mpd_url, true);
+			player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+				clearInterval(eventPoller);
+			});
+
+			
+
+			var eventPoller = setInterval(function() {
+				var streamInfo = player.getActiveStream().getStreamInfo();
+				var dashMetrics = player.getDashMetrics();
+				var dashAdapter = player.getDashAdapter();
+
+				if (dashMetrics && streamInfo) {
+					const periodIdx = streamInfo.index;
+					var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+					var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+					var bitrate = repSwitch ? Math.round(dashAdapter.
+						getBandwidthForRepresentation(repSwitch.to,
+						periodIdx) / 1000) : NaN;
+
+				document.getElementById('buffer').innerText = bufferLevel ;
+				document.getElementById('bitrate').innerText = bitrate ;
+				document.getElementById('representation').innerText = repSwitch.to;
+
+				date = new Date();
+				time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + ":" + date.getMilliseconds();
+
+				data_buffer = {x: time, y: bufferLevel};
+				data_br = {x: time, y: bitrate};
+
+				addData(chart1, 'Buffer Level', data_buffer);
+				addData(chart1, 'Bitrate', data_br);
+			}
+		}, 500);
+
+		};
+
+		</script>
+
+	</body>
+</html>
