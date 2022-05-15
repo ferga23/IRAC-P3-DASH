@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>DASH Application</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.3.0/dash.all.min.js" integrity="sha512-XySDxg2J8BFPCGF0ToToWEkPGqvg9as64sBRrelx17aITK+JKxBEG9fATs5F2H/d5OLZP4V3AULTeM4k14coGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<style>
+			body {
+				background-color: #E1F5FE;
+				font-family: helvetica;
+			}
+			.main {
+				background-color: white;
+				width: 960px;
+				height: 660px;
+				margin-bottom: auto;
+				margin-right: auto;
+				margin-left: auto;
+				margin-top: -25px;
+			}
+			.title {
+				color: #FAFAFA;
+				padding-top: 30px;
+				height: 100px;
+				background-color: #515151;
+			}
+			.reproductor {
+				color: #212121;
+				padding-top: 25px;
+			}
+			video {
+				width: 640px;
+				height: 360px;
+				padding-top: 15px;
+			}
+		</style>
+	</head>
+
+	<body>
+
+	<div class="main">
+		
+		<div class="title" align="center">
+			<h1>Servicio de streaming del Grupo 35</h1>
+		</div>
+		
+		<div class="reproductor" align="center">
+			<h2>Vídeo de ejemplo ofrecido por envivo</h2>
+			<video class="dashjs-player" autoplay controls preload="auto">
+			<source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
+			</video>
+		</div>
+			
+		<script>
+			var player;
+			document.addEventListener("DOMContentLoaded", function () {
+			 init();
+			});
+			function init(){
+			 player = dashjs.MediaPlayerFactory.create( document.querySelector(".dashjsplayer"));
+			};
+		</script>
+
+	</div>
+
+	</body>
+</html>
